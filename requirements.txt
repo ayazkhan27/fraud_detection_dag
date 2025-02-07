@@ -1,0 +1,8 @@
+pandas
+numpy
+scikit-learn
+imbalanced-learn==0.12.0
+pgmpy==0.1.24
+networkx==3.2.1
+matplotlib
+pydot
