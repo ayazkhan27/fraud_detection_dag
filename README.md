@@ -147,4 +147,4 @@ Potential future improvements include:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/url?sa=E&source=gmail&q=LICENSE) file for details. (Create a LICENSE file with the MIT license text).
+This project is licensed under the MIT License - see the [LICENSE](https://www.google.com/url?sa=E&source=gmail&q=LICENSE) file for details.
