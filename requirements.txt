@@ -6,3 +6,4 @@ pgmpy==0.1.24
 networkx==3.2.1
 matplotlib
 pydot
+shap
