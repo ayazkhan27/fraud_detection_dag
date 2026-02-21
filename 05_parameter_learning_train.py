@@ -2,21 +2,20 @@
 
 import pandas as pd
 from pgmpy.models import BayesianNetwork
-from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.estimators import BayesianEstimator # Switched from MaximumLikelihoodEstimator
 import pickle
+from utils import load_config, setup_logger
 
-def learn_parameters(dag_edges_file="learned_dag_edges.txt", data_file="resampled_train_data_no_ohe.csv"):
-    """
-    Learns the parameters (CPDs) of the Bayesian network.
+logger = setup_logger(__name__)
+
+def learn_parameters(config):
+    """Learns parameters (CPDs) using a Bayesian Estimator with a Dirichlet prior."""
     
-    Args:
-        dag_edges_file (str): Path to the text file containing learned DAG edges.
-        data_file (str): Path to the resampled, discretized training data.
-        
-    Returns:
-        BayesianNetwork: The Bayesian network model with learned CPDs.
-    """
-    # Reconstruct the DAG structure from the edges file
+    dag_edges_file = config["paths"]["learned_dag_edges"]
+    data_file = config["paths"]["resampled_train"]
+    model_out = config["paths"]["bayesian_network_model"]
+    
+    logger.info(f"Reconstructing DAG from {dag_edges_file}")
     edges = []
     with open(dag_edges_file, "r") as f:
         for line in f:
@@ -24,24 +23,30 @@ def learn_parameters(dag_edges_file="learned_dag_edges.txt", data_file="resample
             edges.append((u, v))
     model = BayesianNetwork(edges)
 
-    # Load the resampled, discretized data
+    logger.info(f"Loading data {data_file}")
     df = pd.read_csv(data_file)
-    df = df.drop('Amount', axis=1)  # Drop the non-discretized Amount column (as done in structure learning)
+    if 'Amount' in df.columns:
+        df = df.drop('Amount', axis=1)
 
-    # Learn the parameters using Maximum Likelihood Estimation
-    model.fit(df, estimator=MaximumLikelihoodEstimator)
+    # Learn the parameters using Bayesian Estimator (BDeu prior)
+    # This prevents the 0-probability assignments for unseen edge cases mathematically
+    equiv_sample_size = config["dag_learning"]["bdeu_equivalent_sample_size"]
+    logger.info(f"Fitting parameters using BayesianEstimator (BDeu, equiv_sample_size={equiv_sample_size})")
+    
+    model.fit(
+        df, 
+        estimator=BayesianEstimator, 
+        prior_type="BDeu", 
+        equivalent_sample_size=equiv_sample_size
+    )
 
-    # Print the CPDs for inspection
-    for cpd in model.get_cpds():
-        print(f"CPD for {cpd.variable}:")
-        print(cpd)
+    # Save the model
+    with open(model_out, "wb") as f:
+        pickle.dump(model, f)
+    logger.info(f"Bayesian network model with calibrated CPDs saved to {model_out}")
 
     return model
 
 if __name__ == '__main__':
-    model_with_parameters = learn_parameters()
-
-    # Save the model with parameters (overwriting the previous one)
-    with open("bayesian_network_model.pkl", "wb") as f:
-        pickle.dump(model_with_parameters, f)
-    print("\nBayesian network model with parameters saved to bayesian_network_model.pkl")
+    config = load_config()
+    learn_parameters(config)

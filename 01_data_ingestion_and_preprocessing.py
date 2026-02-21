@@ -1,38 +1,58 @@
 # 01_data_ingestion_and_preprocessing.py
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
+from utils import load_config, setup_logger
+from tqdm import tqdm
+import os
 
-def load_and_preprocess(file_path="creditcard.csv"):
-    """Loads, cleans, and standardizes the credit card dataset.
+logger = setup_logger(__name__)
 
-    Args:
-        file_path (str): Path to the CSV dataset.
+def load_and_preprocess(config):
+    """Loads, cleans, and standardizes dataset with progress tracking."""
+    file_path = config["paths"]["raw_data"]
+    
+    logger.info(f"Loading data from {file_path}")
+    
+    # 284807 rows is standard for creditcard dataset
+    chunk_size = 50000
+    estimated_rows = 284807 
+    total_chunks = (estimated_rows // chunk_size) + 1
+    
+    try:
+        chunks = pd.read_csv(file_path, chunksize=chunk_size)
+        df_list = []
+        for chunk in tqdm(chunks, total=total_chunks, desc="Reading CSV Chunks"):
+            df_list.append(chunk)
+        df = pd.concat(df_list, ignore_index=True)
+    except FileNotFoundError:
+        logger.error(f"File {file_path} not found.")
+        raise
+        
+    missing_sum = df.isnull().sum().sum()
+    logger.info(f"Total missing values before handling: {missing_sum}")
 
-    Returns:
-        pandas.DataFrame: Preprocessed DataFrame.
-    """
-    # Data Loading & Exploration
-    df = pd.read_csv(file_path)
-
-    # Check for Missing Values (using isnull() and sum())
-    print("Missing Values Before Handling:\n", df.isnull().sum())
-
-    # Standardization
-    features_to_scale = [f"V{i}" for i in range(1, 29)] + ["Time", "Amount"]
+    features_to_scale = config["preprocessing"]["features_to_scale"]
+    logger.info("Applying StandardScaler to continuous features...")
     scaler = StandardScaler()
     df[features_to_scale] = scaler.fit_transform(df[features_to_scale])
 
-    print("\nFirst 5 Rows of Preprocessed Data:")
-    print(df.head())
-
+    logger.info("Data ingestion and standardization complete.")
     return df
 
 if __name__ == '__main__':
-    df_processed = load_and_preprocess()
-    # Save processed data for the next step
-    df_processed.to_csv("preprocessed_data.csv", index=False)
-
-    #Output Summary for verification
-    print("\nSummary of Preprocessing:")
-    print(f"  Shape of the processed DataFrame: {df_processed.shape}")
-    print(f"  Data types of the columns:\n{df_processed.dtypes}")
+    config = load_config()
+    df_processed = load_and_preprocess(config)
+    
+    out_path = config["paths"]["preprocessed_data"]
+    logger.info("Saving preprocessed DataFrame in chunks...")
+    
+    chunk_size = 50000
+    num_chunks = (len(df_processed) // chunk_size) + 1
+    
+    header = True
+    for i, chunk in enumerate(tqdm(np.array_split(df_processed, num_chunks), total=num_chunks, desc="Saving CSV")):
+        chunk.to_csv(out_path, mode='a' if not header else 'w', index=False, header=header)
+        header = False
+        
+    logger.info(f"Preprocessed DataFrame saved to: {out_path} with shape {df_processed.shape}")
