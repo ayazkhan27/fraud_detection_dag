@@ -1,0 +1,279 @@
+<title>Fraud Blanket</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the network sits beside its detail panel on wide screens and above it on phones */
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#898781; --line:#e1e0d9; --axis:#c3c2b7;
+  --fraud:#eb6834; --normal:#2a78d6; --mid:#f0efec;
+  --s1:#6250d6; --s2:#1baf7a; --s3:#eda100;
+  --accent:#184f95; --accent-wash:#cde2fb;
+  --body:"Public Sans",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#898781; --line:#2c2c2a; --axis:#383835;
+  --fraud:#d95926; --normal:#3987e5; --mid:#383835; --s1:#9085e9; --s2:#199e70; --s3:#c98500;
+  --accent:#86b6ef; --accent-wash:#0d366b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#898781; --line:#2c2c2a; --axis:#383835;
+  --fraud:#d95926; --normal:#3987e5; --mid:#383835; --s1:#9085e9; --s2:#199e70; --s3:#c98500;
+  --accent:#86b6ef; --accent-wash:#0d366b; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body)}
+.wrap{max-width:62rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2rem 4rem;display:flex;flex-direction:column;gap:2.5rem}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+h1{font:700 clamp(1.7rem,6vw,2.5rem)/1.1 var(--body);margin:.4rem 0 .8rem;text-wrap:balance}
+h2{font:700 1.3rem/1.2 var(--body);margin:0 0 .3rem;text-wrap:balance}
+h3{font:600 1rem/1.3 var(--body);margin:0}
+p{margin:0;max-width:65ch}
+.lead{color:var(--ink-2);font-size:1.05rem}
+.sub{color:var(--ink-2);margin-bottom:1rem}
+.note{color:var(--ink-3);font-size:.85rem}
+section{display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:1.25rem}
+.stat{background:var(--surface);padding:.9rem 1rem}
+.stat b{display:block;font:700 1.6rem/1.1 var(--body);font-variant-numeric:tabular-nums}
+.stat span{color:var(--ink-2);font-size:.85rem}
+.two{display:grid;grid-template-columns:minmax(0,26rem) minmax(0,1fr);gap:1.5rem;align-items:start}
+.two.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:760px){.two,.two.even{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1rem;min-width:0}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--body);fill:var(--ink)}
+.node{cursor:pointer}
+.node circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.5}
+.node.sel circle{fill:var(--accent-wash);stroke:var(--accent);stroke-width:2.5}
+.node:focus-visible circle{stroke:var(--accent);stroke-width:3}
+.node:focus{outline:none}
+.node.edge circle{stroke-dasharray:4 3;stroke:var(--ink-3)}
+.node.edge{cursor:default}
+.spoke{stroke:var(--ink-2);fill:none}
+.spoke.edge{stroke:var(--ink-3);stroke-dasharray:4 3}
+.link{stroke:var(--ink-3);stroke-width:1.5;stroke-dasharray:2 4;fill:none}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;font-size:.82rem;color:var(--ink-2);margin-top:.6rem}
+.legend i{display:inline-block;width:1.6rem;height:0;border-top:2px solid var(--ink-2);vertical-align:middle;margin-right:.35rem}
+.legend i.d1{border-top:2px dotted var(--ink-3)} .legend i.d2{border-top:2px dashed var(--ink-3)}
+.legend i.sw{height:.7rem;border:0;border-radius:2px;width:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.chips span{font:400 .78rem var(--mono);color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:.1rem .4rem}
+.bars{display:grid;grid-template-columns:minmax(5.5rem,auto) minmax(0,1fr);gap:.45rem .7rem;align-items:center;margin-top:.8rem}
+.bars .lab{font-size:.85rem;color:var(--ink-2);line-height:1.25}
+.bars .lab small{display:block;color:var(--ink-3);font:400 .72rem var(--mono)}
+.track{position:relative;height:1.5rem;min-width:0}
+.track::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid var(--axis)}
+.bar{position:absolute;top:3px;bottom:3px;min-width:2px}
+.bar.f{left:50%;background:var(--fraud);border-radius:0 4px 4px 0}
+.bar.n{right:50%;background:var(--normal);border-radius:4px 0 0 4px}
+.val{position:absolute;top:0;line-height:1.5rem;font:500 .74rem var(--mono);color:var(--ink);white-space:nowrap}
+.val.f{right:52%} .val.n{left:52%}
+.axis2{display:flex;justify-content:space-between;font:400 .72rem var(--mono);color:var(--ink-3);margin-left:calc(5.5rem + .7rem)}
+.tabs{display:flex;flex-wrap:wrap;gap:.4rem}
+.tabs button{font:600 .85rem var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--axis);border-radius:6px;padding:.45rem .7rem;cursor:pointer;min-height:40px}
+.tabs button[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent)}
+.tabs button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-weight:600;margin-top:.8rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums;min-width:34rem;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:.45rem .6rem;text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
+tr.me td{font-weight:600}
+.slider{display:grid;gap:.5rem;margin-top:.5rem}
+.slider input{width:100%}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(7rem,1fr));gap:.6rem;font-variant-numeric:tabular-nums}
+.out div b{display:block;font:700 1.25rem/1.1 var(--body)}
+.out div span{font-size:.8rem;color:var(--ink-2)}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:400 .75rem/1.4 var(--mono);padding:.35rem .5rem;border-radius:4px;white-space:nowrap;transform:translate(-50%,-110%)}
+.prwrap{position:relative}
+ul.plain{margin:0;padding-left:1.1rem;max-width:65ch;display:flex;flex-direction:column;gap:.35rem}
+code{font:400 .85em var(--mono)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Bayesian network · card fraud · ULB / Worldline data, Sept 2013</div>
+    <h1>Which factors signal card fraud?</h1>
+    <p class="lead">A fraud detector you can read. It learns which few transaction features carry the signal about fraud, shows how much each one counts, and explains every score as a sum of evidence.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section>
+    <h2>The Markov blanket of fraud</h2>
+    <p class="sub">The Markov blanket is the smallest set of features that, once known, makes every other feature unnecessary for predicting fraud. Tap a feature to see what it says.</p>
+    <div class="two">
+      <div class="panel">
+        <svg id="net" viewBox="0 0 440 440" role="group" aria-label="Network: fraud at the centre, linked to its blanket features"></svg>
+        <div class="legend">
+          <span><i></i>in the blanket (thicker = stronger)</span>
+          <span><i class="d2"></i>borderline</span>
+          <span><i class="d1"></i>two features move together</span>
+        </div>
+      </div>
+      <div class="panel" id="detail" aria-live="polite"></div>
+    </div>
+    <div>
+      <h3>Not needed once the blanket is known</h3>
+      <div class="chips" id="outside"></div>
+    </div>
+    <p class="note">The lines say "carries information about". They do not say which causes which: these data cannot settle direction, and V1 to V28 are anonymised blends of the bank's original fields.</p>
+  </section>
+
+  <section>
+    <h2>Why did the model score this transaction?</h2>
+    <p class="sub">Every score starts at the base rate and moves once per feature. Four real transactions from the test period:</p>
+    <div class="tabs" id="extabs"></div>
+    <div class="panel" id="example" aria-live="polite"></div>
+  </section>
+
+  <section>
+    <h2>Precision and recall on unseen transactions</h2>
+    <p class="sub" id="prsub"></p>
+    <div class="two even">
+      <div class="panel prwrap">
+        <svg id="pr" viewBox="0 0 440 330" role="img" aria-label="Precision-recall curves for three models"></svg>
+        <div id="tip" hidden></div>
+      </div>
+      <div class="panel">
+        <h3>Pick how cautious to be</h3>
+        <div class="slider">
+          <label for="thr" id="thrlab"></label>
+          <input type="range" id="thr" min="0" step="1">
+          <div class="out" id="throut"></div>
+        </div>
+        <p class="note" style="margin-top:.8rem" id="thrnote"></p>
+      </div>
+    </div>
+    <div class="tbl"><table id="mt"></table></div>
+    <p class="note" id="gapnote"></p>
+  </section>
+
+  <section>
+    <h2>What this can and cannot tell you</h2>
+    <ul class="plain" id="limits"></ul>
+  </section>
+</div>
+
+<script>
+const DATA=/*DATA*/null;
+(function(){
+const D=DATA, $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.append(e);return e};
+const pct=(x,d=0)=>(100*x).toFixed(d)+"%", n0=x=>x.toLocaleString("en-US");
+const times=b=>{const x=2**Math.abs(b);return x>=10?Math.round(x):x.toFixed(1)};
+const says=b=>Math.abs(b)<0.2?"no signal":"×"+times(b)+(b>0?" fraud":" normal");
+const bn=D.metrics[0], xg=D.metrics[3], T=D.split.test;
+
+// headline
+$("stats").innerHTML=[
+  [D.features.length+" of 30","features are in the blanket"],
+  [bn.ap.toFixed(2),"area under the precision-recall curve (XGBoost: "+xg.ap.toFixed(2)+")"],
+  [pct(bn.precision),"of flagged transactions were fraud"],
+  [pct(bn.recall),"of frauds were caught ("+bn.tp+" of "+T.frauds+")"]
+].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+
+// strength of each feature = mutual information with fraud, in bits
+function mi(f){const F=f.bins.reduce((s,b)=>s+b.frauds,0),N=f.bins.reduce((s,b)=>s+b.rows,0);let m=0;
+  for(const b of f.bins)for(const [k,tot] of [[b.frauds,F],[b.rows-b.frauds,N-F]]){if(k>0)m+=k/N*Math.log2((k/tot)/(b.rows/N))}return m}
+D.features.forEach(f=>f.mi=mi(f));
+const maxMI=Math.max(...D.features.map(f=>f.mi));
+
+// ring order: walk the feature-link tree so linked features sit near each other
+const adj={};D.features.forEach(f=>adj[f.name]=[]);D.links.forEach(l=>{adj[l.a].push(l.b);adj[l.b].push(l.a)});
+const order=[],seen=new Set();
+(function walk(v){if(seen.has(v))return;seen.add(v);order.push(v);adj[v].forEach(walk)})(D.features.slice().sort((a,b)=>adj[b.name].length-adj[a.name].length)[0].name);
+D.features.forEach(f=>{if(!seen.has(f.name))order.push(f.name)});
+const C=220,pos={};
+order.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/order.length;pos[n]=[C+122*Math.cos(a),C+122*Math.sin(a)]});
+D.borderline.forEach((b,i)=>{const a=-Math.PI/2+(i+0.5)*2*Math.PI/order.length+Math.PI/order.length*2*i;pos[b.name]=[C+192*Math.cos(a),C+192*Math.sin(a)]});
+
+const net=$("net");
+D.links.forEach(l=>{const [x1,y1]=pos[l.a],[x2,y2]=pos[l.b];const mx=(x1+x2)/2,my=(y1+y2)/2,k=1.22;
+  el("path",{class:"link",d:`M${x1},${y1} Q${C+(mx-C)*k},${C+(my-C)*k} ${x2},${y2}`},net)});
+D.borderline.forEach(b=>{const [x,y]=pos[b.name];el("line",{class:"spoke edge",x1:C,y1:C,x2:x,y2:y,"stroke-width":1.2},net)});
+D.features.forEach(f=>{const [x,y]=pos[f.name];el("line",{class:"spoke",x1:C,y1:C,x2:x,y2:y,"stroke-width":(1.5+6*f.mi/maxMI).toFixed(1)},net)});
+const hub=el("g",{},net);el("circle",{cx:C,cy:C,r:36,fill:"var(--ink)"},hub);
+el("text",{x:C,y:C+5,"text-anchor":"middle","font-weight":700,"font-size":15,style:"fill:var(--bg)"},hub).textContent="Fraud";
+D.borderline.forEach(b=>{const [x,y]=pos[b.name];const g=el("g",{class:"node edge"},net);el("circle",{cx:x,cy:y,r:19},g);
+  el("text",{x,y:y+4,"text-anchor":"middle","font-size":b.name.length>4?9.5:11.5,style:"fill:var(--ink-2)"},g).textContent=b.name;
+  el("title",{},g).textContent=b.name+": chosen at only some penalty strengths, so left out"});
+D.features.forEach(f=>{const [x,y]=pos[f.name];const g=el("g",{class:"node",tabindex:0,role:"button","aria-label":f.name},net);g.dataset.n=f.name;
+  el("circle",{cx:x,cy:y,r:25},g);el("text",{x,y:y+5,"text-anchor":"middle","font-weight":600,"font-size":14},g).textContent=f.name;
+  g.addEventListener("click",()=>pick(f.name));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(f.name)}})});
+$("outside").innerHTML=D.outside.map(o=>`<span>${o.name}</span>`).join("");
+
+function bars(rows){ // rows: [label, small, bits]
+  const mx=Math.max(7,...rows.map(r=>Math.abs(r[2])));
+  return `<div class="bars">`+rows.map(r=>{const w=Math.abs(r[2])/mx*48,f=r[2]>0;
+    return `<div class="lab">${r[0]}<small>${r[1]}</small></div><div class="track"><div class="bar ${f?"f":"n"}" style="width:${w.toFixed(1)}%"></div><div class="val ${f?"f":"n"}">${says(r[2])}</div></div>`}).join("")
+    +`</div><div class="axis2"><span>← more common in normal</span><span>more common in fraud →</span></div>`}
+
+function pick(name){
+  net.querySelectorAll(".node").forEach(g=>g.classList.toggle("sel",g.dataset.n===name));
+  const f=D.features.find(x=>x.name===name),worst=Math.min(...f.stability);
+  const partners=adj[name].length?"Moves together with "+adj[name].join(", ")+".":"Not linked to another feature.";
+  $("detail").innerHTML=`<h3>${name}: what each range says about fraud</h3>
+    <p class="note">Ranges are where the value falls among all transactions. ${partners}</p>`
+    +bars(f.bins.map(b=>[b.label,n0(b.rows)+" rows, "+b.frauds+" fraud",b.bits]))
+    +`<p class="note" style="margin-top:.8rem">${worst>=1?"Chosen in every one":"Chosen in at least "+Math.round(worst*100)} of 100 random half-samples, at every penalty strength tried.</p>`}
+pick(D.features.slice().sort((a,b)=>b.mi-a.mi)[0].name);
+
+// examples
+const base=1/(1+2**(-D.prior_bits));
+function showEx(i){
+  $("extabs").querySelectorAll("button").forEach((b,k)=>b.setAttribute("aria-pressed",k===i));
+  const e=D.examples[i];
+  $("example").innerHTML=`<p class="note">Starts at the base rate: about 1 in ${Math.round(1/base)} transactions is fraud. Each feature then moves the odds.</p>`
+    +bars(D.features.map((f,k)=>[f.name,f.bins[e.bins[k]].label,e.bits[k]]))
+    +`<p class="verdict">Model: ${e.prob>0.9995?"over 99.9":e.prob<0.0005?"under 0.1":(100*e.prob).toFixed(1)}% chance of fraud. In reality it was ${e.fraud?"fraud":"normal"}.</p>
+    <p class="note">For linked features, the second one counts only for what it adds beyond the first, so its bar can differ from its stand-alone reading above.</p>`}
+$("extabs").innerHTML=D.examples.map(e=>`<button type="button" aria-pressed="false">${e.why}</button>`).join("");
+$("extabs").querySelectorAll("button").forEach((b,i)=>b.addEventListener("click",()=>showEx(i)));
+showEx(0);
+
+// precision-recall
+const hrs=h=>"hour "+Math.round(h[0])+" to "+Math.round(h[1]);
+$("prsub").textContent=`The model was fitted on the first ${n0(D.split.train.rows)} transactions (${hrs(D.split.train.hours)}), tuned on the next ${n0(D.split.valid.rows)}, and tested once on the last ${n0(T.rows)} (${hrs(T.hours)}), which contain ${T.frauds} frauds.`;
+const pr=$("pr"),L=46,R=14,Tp=14,B=40,W=440-L-R,H=330-Tp-B,X=r=>L+r*W,Y=p=>Tp+(1-p)*H;
+for(let k=0;k<=4;k++){const v=k/4;
+  el("line",{x1:L,x2:L+W,y1:Y(v),y2:Y(v),stroke:"var(--line)"},pr);el("line",{x1:X(v),x2:X(v),y1:Tp,y2:Tp+H,stroke:"var(--line)"},pr);
+  el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end","font-size":11,style:"fill:var(--ink-3)"},pr).textContent=pct(v);
+  el("text",{x:X(v),y:Tp+H+15,"text-anchor":"middle","font-size":11,style:"fill:var(--ink-3)"},pr).textContent=pct(v)}
+el("text",{x:L+W/2,y:326,"text-anchor":"middle","font-size":12,style:"fill:var(--ink-2)"},pr).textContent="Recall: share of frauds caught";
+el("text",{x:12,y:Tp+H/2,"text-anchor":"middle","font-size":12,transform:`rotate(-90 12 ${Tp+H/2})`,style:"fill:var(--ink-2)"},pr).textContent="Precision";
+const series=Object.keys(D.curves).map((k,i)=>({name:k,short:["Bayesian network","XGBoost, all 30","Logistic regression"][i],col:["var(--s1)","var(--s2)","var(--s3)"][i],pts:D.curves[k].filter(p=>p[0]>0)}));
+series.slice().reverse().forEach(s=>el("path",{d:"M"+s.pts.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join("L"),fill:"none",stroke:s.col,"stroke-width":s===series[0]?2.5:2,"stroke-linejoin":"round"},pr));
+series.forEach((s,i)=>{const y=Tp+H-14-(2-i)*17;el("line",{x1:L+12,x2:L+34,y1:y-4,y2:y-4,stroke:s.col,"stroke-width":3},pr);el("text",{x:L+40,y,"font-size":12},pr).textContent=s.short});
+const dot=el("circle",{r:6,fill:"var(--s1)",stroke:"var(--surface)","stroke-width":2},pr);
+const cross=el("line",{y1:Tp,y2:Tp+H,stroke:"var(--axis)","stroke-dasharray":"3 3",visibility:"hidden"},pr);
+const at=(s,r)=>s.pts.reduce((b,p)=>Math.abs(p[0]-r)<Math.abs(b[0]-r)?p:b)[1];
+const tip=$("tip");
+pr.addEventListener("pointermove",e=>{const bx=pr.getBoundingClientRect(),r=((e.clientX-bx.left)/bx.width*440-L)/W;
+  if(r<0.02||r>1){tip.hidden=true;cross.setAttribute("visibility","hidden");return}
+  cross.setAttribute("x1",X(r));cross.setAttribute("x2",X(r));cross.setAttribute("visibility","visible");
+  tip.hidden=false;tip.style.left=(X(r)/440*bx.width)+"px";tip.style.top=(Tp/330*bx.height+28)+"px";
+  tip.innerHTML="At "+pct(r)+" recall, precision is:<br>"+series.map(s=>s.short+" "+pct(at(s,r))).join("<br>")});
+pr.addEventListener("pointerleave",()=>{tip.hidden=true;cross.setAttribute("visibility","hidden")});
+
+const thr=$("thr");thr.max=D.sweep.length-1;
+thr.value=D.sweep.findIndex(s=>Math.abs(s.threshold-D.threshold)<1e-3);
+function showThr(){const s=D.sweep[+thr.value];
+  $("thrlab").textContent="Flag a transaction when the model's fraud probability is at least "+(s.threshold*100).toFixed(s.threshold<0.01?2:1)+"%";
+  $("throut").innerHTML=[[n0(s.tp+s.fp),"transactions flagged"],[s.tp+" of "+T.frauds,"frauds caught"],[s.fp,"false alarms"],[pct(s.precision),"precision"],[pct(s.recall),"recall"]]
+    .map(o=>`<div><b>${o[0]}</b><span>${o[1]}</span></div>`).join("");
+  dot.setAttribute("cx",X(s.recall));dot.setAttribute("cy",Y(s.precision))}
+thr.addEventListener("input",showThr);showThr();
+$("thrnote").textContent="The starting position ("+(D.threshold*100).toFixed(0)+"%) was chosen on the tuning slice, before the test slice was opened. The dot on the chart follows the slider.";
+
+$("mt").innerHTML=`<thead><tr><th>Model</th><th>Area under PR curve</th><th>95% interval</th><th>Precision</th><th>Recall</th><th>F1</th><th>Caught in top ${bn.budget_alerts}</th></tr></thead><tbody>`
+  +D.metrics.map((m,i)=>`<tr class="${i?"":"me"}"><td>${m.model}</td><td>${m.ap.toFixed(3)}</td><td>${m.ap_lo.toFixed(2)} to ${m.ap_hi.toFixed(2)}</td><td>${pct(m.precision,1)}</td><td>${pct(m.recall,1)}</td><td>${m.f1.toFixed(3)}</td><td>${m.budget_caught} of ${T.frauds}</td></tr>`).join("")+"</tbody>";
+const g=D.gap,gb=D.gap_blanket;
+$("gapnote").textContent=`Precision, recall and F1 use each model's own threshold, chosen on the tuning slice. "Top ${bn.budget_alerts}" is what each model catches if only 1 in 1,000 transactions can be reviewed. Intervals come from ${1000} bootstrap resamples of the test slice.`;
+
+$("limits").innerHTML=[
+  `<b>It finds signals, not causes.</b> The blanket says which features carry information about fraud. It cannot say a feature causes fraud, and nobody can act on "V14" because its meaning is withheld.`,
+  `<b>The blanket holds nearly all the usable signal.</b> XGBoost given only the ${D.features.length} blanket features scores ${D.metrics[2].ap.toFixed(3)}; given all 30 it scores ${xg.ap.toFixed(3)} (difference ${gb.mean.toFixed(3)}, 95% interval ${gb.lo.toFixed(3)} to ${gb.hi.toFixed(3)}).`,
+  `<b>Reading the model costs some accuracy.</b> The Bayesian network trails XGBoost by ${Math.abs(g.mean).toFixed(3)} in area under the curve (95% interval ${Math.abs(g.hi).toFixed(3)} to ${Math.abs(g.lo).toFixed(3)}).`,
+  `<b>The test is small.</b> ${T.frauds} frauds in the test slice, so every figure here has a wide interval.`,
+  `<b>Two days of data.</b> The model has never seen a weekend, a holiday or a new fraud scheme.`
+].map(t=>`<li>${t}</li>`).join("");
+})();
+</script>

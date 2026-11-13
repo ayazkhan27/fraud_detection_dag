@@ -1,0 +1,280 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style></head><body><title>Fraud Blanket</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the network sits beside its detail panel on wide screens and above it on phones */
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#898781; --line:#e1e0d9; --axis:#c3c2b7;
+  --fraud:#eb6834; --normal:#2a78d6; --mid:#f0efec;
+  --s1:#6250d6; --s2:#1baf7a; --s3:#eda100;
+  --accent:#184f95; --accent-wash:#cde2fb;
+  --body:"Public Sans",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#898781; --line:#2c2c2a; --axis:#383835;
+  --fraud:#d95926; --normal:#3987e5; --mid:#383835; --s1:#9085e9; --s2:#199e70; --s3:#c98500;
+  --accent:#86b6ef; --accent-wash:#0d366b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#898781; --line:#2c2c2a; --axis:#383835;
+  --fraud:#d95926; --normal:#3987e5; --mid:#383835; --s1:#9085e9; --s2:#199e70; --s3:#c98500;
+  --accent:#86b6ef; --accent-wash:#0d366b; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body)}
+.wrap{max-width:62rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2rem 4rem;display:flex;flex-direction:column;gap:2.5rem}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+h1{font:700 clamp(1.7rem,6vw,2.5rem)/1.1 var(--body);margin:.4rem 0 .8rem;text-wrap:balance}
+h2{font:700 1.3rem/1.2 var(--body);margin:0 0 .3rem;text-wrap:balance}
+h3{font:600 1rem/1.3 var(--body);margin:0}
+p{margin:0;max-width:65ch}
+.lead{color:var(--ink-2);font-size:1.05rem}
+.sub{color:var(--ink-2);margin-bottom:1rem}
+.note{color:var(--ink-3);font-size:.85rem}
+section{display:flex;flex-direction:column;gap:.75rem;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:1.25rem}
+.stat{background:var(--surface);padding:.9rem 1rem}
+.stat b{display:block;font:700 1.6rem/1.1 var(--body);font-variant-numeric:tabular-nums}
+.stat span{color:var(--ink-2);font-size:.85rem}
+.two{display:grid;grid-template-columns:minmax(0,26rem) minmax(0,1fr);gap:1.5rem;align-items:start}
+.two.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:760px){.two,.two.even{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:1rem;min-width:0}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--body);fill:var(--ink)}
+.node{cursor:pointer}
+.node circle{fill:var(--surface);stroke:var(--ink-2);stroke-width:1.5}
+.node.sel circle{fill:var(--accent-wash);stroke:var(--accent);stroke-width:2.5}
+.node:focus-visible circle{stroke:var(--accent);stroke-width:3}
+.node:focus{outline:none}
+.node.edge circle{stroke-dasharray:4 3;stroke:var(--ink-3)}
+.node.edge{cursor:default}
+.spoke{stroke:var(--ink-2);fill:none}
+.spoke.edge{stroke:var(--ink-3);stroke-dasharray:4 3}
+.link{stroke:var(--ink-3);stroke-width:1.5;stroke-dasharray:2 4;fill:none}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;font-size:.82rem;color:var(--ink-2);margin-top:.6rem}
+.legend i{display:inline-block;width:1.6rem;height:0;border-top:2px solid var(--ink-2);vertical-align:middle;margin-right:.35rem}
+.legend i.d1{border-top:2px dotted var(--ink-3)} .legend i.d2{border-top:2px dashed var(--ink-3)}
+.legend i.sw{height:.7rem;border:0;border-radius:2px;width:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.4rem}
+.chips span{font:400 .78rem var(--mono);color:var(--ink-3);border:1px solid var(--line);border-radius:4px;padding:.1rem .4rem}
+.bars{display:grid;grid-template-columns:minmax(5.5rem,auto) minmax(0,1fr);gap:.45rem .7rem;align-items:center;margin-top:.8rem}
+.bars .lab{font-size:.85rem;color:var(--ink-2);line-height:1.25}
+.bars .lab small{display:block;color:var(--ink-3);font:400 .72rem var(--mono)}
+.track{position:relative;height:1.5rem;min-width:0}
+.track::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;border-left:1px solid var(--axis)}
+.bar{position:absolute;top:3px;bottom:3px;min-width:2px}
+.bar.f{left:50%;background:var(--fraud);border-radius:0 4px 4px 0}
+.bar.n{right:50%;background:var(--normal);border-radius:4px 0 0 4px}
+.val{position:absolute;top:0;line-height:1.5rem;font:500 .74rem var(--mono);color:var(--ink);white-space:nowrap}
+.val.f{right:52%} .val.n{left:52%}
+.axis2{display:flex;justify-content:space-between;font:400 .72rem var(--mono);color:var(--ink-3);margin-left:calc(5.5rem + .7rem)}
+.tabs{display:flex;flex-wrap:wrap;gap:.4rem}
+.tabs button{font:600 .85rem var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--axis);border-radius:6px;padding:.45rem .7rem;cursor:pointer;min-height:40px}
+.tabs button[aria-pressed="true"]{background:var(--accent-wash);border-color:var(--accent)}
+.tabs button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-weight:600;margin-top:.8rem}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums;min-width:34rem;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:.45rem .6rem;text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+th{font:500 .72rem var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
+tr.me td{font-weight:600}
+.slider{display:grid;gap:.5rem;margin-top:.5rem}
+.slider input{width:100%}
+.out{display:grid;grid-template-columns:repeat(auto-fit,minmax(7rem,1fr));gap:.6rem;font-variant-numeric:tabular-nums}
+.out div b{display:block;font:700 1.25rem/1.1 var(--body)}
+.out div span{font-size:.8rem;color:var(--ink-2)}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font:400 .75rem/1.4 var(--mono);padding:.35rem .5rem;border-radius:4px;white-space:nowrap;transform:translate(-50%,-110%)}
+.prwrap{position:relative}
+ul.plain{margin:0;padding-left:1.1rem;max-width:65ch;display:flex;flex-direction:column;gap:.35rem}
+code{font:400 .85em var(--mono)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Bayesian network · card fraud · ULB / Worldline data, Sept 2013</div>
+    <h1>Which factors signal card fraud?</h1>
+    <p class="lead">A fraud detector you can read. It learns which few transaction features carry the signal about fraud, shows how much each one counts, and explains every score as a sum of evidence.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section>
+    <h2>The Markov blanket of fraud</h2>
+    <p class="sub">The Markov blanket is the smallest set of features that, once known, makes every other feature unnecessary for predicting fraud. Tap a feature to see what it says.</p>
+    <div class="two">
+      <div class="panel">
+        <svg id="net" viewBox="0 0 440 440" role="group" aria-label="Network: fraud at the centre, linked to its blanket features"></svg>
+        <div class="legend">
+          <span><i></i>in the blanket (thicker = stronger)</span>
+          <span><i class="d2"></i>borderline</span>
+          <span><i class="d1"></i>two features move together</span>
+        </div>
+      </div>
+      <div class="panel" id="detail" aria-live="polite"></div>
+    </div>
+    <div>
+      <h3>Not needed once the blanket is known</h3>
+      <div class="chips" id="outside"></div>
+    </div>
+    <p class="note">The lines say "carries information about". They do not say which causes which: these data cannot settle direction, and V1 to V28 are anonymised blends of the bank's original fields.</p>
+  </section>
+
+  <section>
+    <h2>Why did the model score this transaction?</h2>
+    <p class="sub">Every score starts at the base rate and moves once per feature. Four real transactions from the test period:</p>
+    <div class="tabs" id="extabs"></div>
+    <div class="panel" id="example" aria-live="polite"></div>
+  </section>
+
+  <section>
+    <h2>Precision and recall on unseen transactions</h2>
+    <p class="sub" id="prsub"></p>
+    <div class="two even">
+      <div class="panel prwrap">
+        <svg id="pr" viewBox="0 0 440 330" role="img" aria-label="Precision-recall curves for three models"></svg>
+        <div id="tip" hidden></div>
+      </div>
+      <div class="panel">
+        <h3>Pick how cautious to be</h3>
+        <div class="slider">
+          <label for="thr" id="thrlab"></label>
+          <input type="range" id="thr" min="0" step="1">
+          <div class="out" id="throut"></div>
+        </div>
+        <p class="note" style="margin-top:.8rem" id="thrnote"></p>
+      </div>
+    </div>
+    <div class="tbl"><table id="mt"></table></div>
+    <p class="note" id="gapnote"></p>
+  </section>
+
+  <section>
+    <h2>What this can and cannot tell you</h2>
+    <ul class="plain" id="limits"></ul>
+  </section>
+</div>
+
+<script>
+const DATA={"split":{"train":{"rows":170884,"frauds":360,"hours":[0.0,33.443333333333335]},"valid":{"rows":56961,"frauds":57,"hours":[33.443333333333335,40.34638888888889]},"test":{"rows":56962,"frauds":75,"hours":[40.346666666666664,47.99777777777778]}},"prior_bits":-8.883768710154191,"base_rate":0.0021066922590763323,"features":[{"name":"V10","parent":null,"stability":[1.0,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-2.1303053994642336,"rows":1709,"frauds":294,"share":0.0100009363076707,"bits":6.6011853071616144},{"label":"low 1-5%","lo":-2.1303053994642336,"hi":-1.3462918909437527,"rows":6836,"frauds":14,"share":0.0400037452306828,"bits":-0.04029548702926284},{"label":"low 5-25%","lo":-1.3462918909437527,"hi":-0.519236841301429,"rows":34176,"frauds":15,"share":0.1999953184616465,"bits":-2.1922020044731103},{"label":"middle 50%","lo":-0.519236841301429,"hi":0.4083421071186535,"rows":85442,"frauds":22,"share":0.5,"bits":-2.899713732236397},{"label":"high 75-95%","lo":0.4083421071186535,"hi":1.4622994777414249,"rows":34176,"frauds":11,"share":0.1999953184616465,"bits":-2.6074091213648534},{"label":"high 95-99%","lo":1.4622994777414249,"hi":3.266893651982063,"rows":6836,"frauds":4,"share":0.0400037452306828,"bits":-1.7998338119963175},{"label":"highest 1%","lo":3.266893651982063,"hi":null,"rows":1709,"frauds":0,"share":0.0100009363076707,"bits":-6.1928669901941324}]},{"name":"V12","parent":"V14","stability":[1.0,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-3.2874482557838953,"rows":1709,"frauds":278,"share":0.0100009363076707,"bits":6.504247106143609},{"label":"low 1-5%","lo":-3.2874482557838953,"hi":-2.3922013411820187,"rows":6836,"frauds":22,"share":0.0400037452306828,"bits":0.6060653320722047},{"label":"low 5-25%","lo":-2.3922013411820187,"hi":-0.5095037166261087,"rows":34176,"frauds":30,"share":0.1999953184616465,"bits":-1.2373710688640087},{"label":"middle 50%","lo":-0.5095037166261087,"hi":0.617386933898667,"rows":85442,"frauds":23,"share":0.5,"bits":-2.841981345346361},{"label":"high 75-95%","lo":0.617386933898667,"hi":1.261028520773424,"rows":34176,"frauds":6,"share":0.1999953184616465,"bits":-3.385229824938304},{"label":"high 95-99%","lo":1.261028520773424,"hi":1.7280643813596435,"rows":6836,"frauds":1,"share":0.0400037452306828,"bits":-3.6078059975210155},{"label":"highest 1%","lo":1.7280643813596435,"hi":null,"rows":1709,"frauds":0,"share":0.0100009363076707,"bits":-6.1928669901941324}]},{"name":"V14","parent":"V10","stability":[1.0,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-3.0454951796322502,"rows":1703,"frauds":302,"share":0.009965824770019428,"bits":6.654255132716022},{"label":"low 1-5%","lo":-3.0454951796322502,"hi":-1.239924730565052,"rows":6842,"frauds":17,"share":0.040038856768334075,"bits":0.23560223200149708},{"label":"low 5-25%","lo":-1.239924730565052,"hi":-0.3368688192755367,"rows":34176,"frauds":22,"share":0.1999953184616465,"bits":-1.6683437588350163},{"label":"middle 50%","lo":-0.3368688192755367,"hi":0.5280083865112475,"rows":85442,"frauds":10,"share":0.5,"bits":-3.8707700395617644},{"label":"high 75-95%","lo":0.5280083865112475,"hi":1.577736210295557,"rows":34176,"frauds":8,"share":0.1999953184616465,"bits":-3.022574231278575},{"label":"high 95-99%","lo":1.577736210295557,"hi":2.2625893596452618,"rows":6836,"frauds":0,"share":0.0400037452306828,"bits":-6.1928669901941324},{"label":"highest 1%","lo":2.2625893596452618,"hi":null,"rows":1709,"frauds":1,"share":0.0100009363076707,"bits":-1.7998338119963175}]},{"name":"V16","parent":"V17","stability":[1.0,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-2.3896516442207525,"rows":1709,"frauds":257,"share":0.0100009363076707,"bits":6.369934730898041},{"label":"low 1-5%","lo":-2.3896516442207525,"hi":-1.475129260615626,"rows":6836,"frauds":26,"share":0.0400037452306828,"bits":0.8459194057899625},{"label":"low 5-25%","lo":-1.475129260615626,"hi":-0.4709897505250227,"rows":34176,"frauds":24,"share":0.1999953184616465,"bits":-1.5479649258941932},{"label":"middle 50%","lo":-0.4709897505250227,"hi":0.5278799879922418,"rows":85442,"frauds":17,"share":0.5,"bits":-3.2291057996925354},{"label":"high 75-95%","lo":0.5278799879922418,"hi":1.2802930091338747,"rows":34176,"frauds":19,"share":0.1999953184616465,"bits":-1.8701045536123355},{"label":"high 95-99%","lo":1.2802930091338747,"hi":1.8121788236266685,"rows":6836,"frauds":11,"share":0.0400037452306828,"bits":-0.3833214473556366},{"label":"highest 1%","lo":1.8121788236266685,"hi":null,"rows":1709,"frauds":6,"share":0.0100009363076707,"bits":0.7309361024075203}]},{"name":"V17","parent":"V14","stability":[1.0,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-1.3306844738636903,"rows":1709,"frauds":284,"share":0.0100009363076707,"bits":6.541109211995399},{"label":"low 1-5%","lo":-1.3306844738636903,"hi":-0.9360238562360186,"rows":6836,"frauds":2,"share":0.0400037452306828,"bits":-2.7331360289769817},{"label":"low 5-25%","lo":-0.9360238562360186,"hi":-0.417752370286779,"rows":34176,"frauds":2,"share":0.1999953184616465,"bits":-4.607797548302679},{"label":"middle 50%","lo":-0.417752370286779,"hi":0.4354980926764237,"rows":85442,"frauds":18,"share":0.5,"bits":-3.1569391258914576},{"label":"high 75-95%","lo":0.4354980926764237,"hi":1.2861165143827356,"rows":34176,"frauds":19,"share":0.1999953184616465,"bits":-1.8701045536123355},{"label":"high 95-99%","lo":1.2861165143827356,"hi":2.496047407261543,"rows":6836,"frauds":16,"share":0.0400037452306828,"bits":0.1502301647666989},{"label":"highest 1%","lo":2.496047407261543,"hi":null,"rows":1709,"frauds":19,"share":0.0100009363076707,"bits":2.3967741534615423}]},{"name":"V21","parent":"V10","stability":[0.98,1.0,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-1.4674178149249033,"rows":1709,"frauds":33,"share":0.0100009363076707,"bits":3.2036340181960283},{"label":"low 1-5%","lo":-1.4674178149249033,"hi":-0.5139306251555653,"rows":6836,"frauds":16,"share":0.0400037452306828,"bits":0.1502301647666989},{"label":"low 5-25%","lo":-0.5139306251555653,"hi":-0.23072045881188502,"rows":34176,"frauds":21,"share":0.1999953184616465,"bits":-1.7325164020199404},{"label":"middle 50%","lo":-0.23072045881188502,"hi":0.128336603761072,"rows":85442,"frauds":28,"share":0.5,"bits":-2.5835849016204038},{"label":"high 75-95%","lo":0.128336603761072,"hi":0.4973081801672727,"rows":34176,"frauds":51,"share":0.1999953184616465,"bits":-0.490239707902929},{"label":"high 95-99%","lo":0.4973081801672727,"hi":1.9158132949280018,"rows":6836,"frauds":149,"share":0.0400037452306828,"bits":3.3818222759524477},{"label":"highest 1%","lo":1.9158132949280018,"hi":null,"rows":1709,"frauds":62,"share":0.0100009363076707,"bits":4.1375956973983}]},{"name":"V4","parent":"V10","stability":[0.96,0.99,1.0,1.0],"bins":[{"label":"lowest 1%","lo":null,"hi":-2.985291239060075,"rows":1709,"frauds":0,"share":0.0100009363076707,"bits":-6.1928669901941324},{"label":"low 1-5%","lo":-2.985291239060075,"hi":-2.07066865211262,"rows":6836,"frauds":0,"share":0.0400037452306828,"bits":-6.1928669901941324},{"label":"low 5-25%","lo":-2.07066865211262,"hi":-0.7434745012867551,"rows":34176,"frauds":2,"share":0.1999953184616465,"bits":-4.607797548302679},{"label":"middle 50%","lo":-0.7434745012867551,"hi":0.9376252099835516,"rows":85442,"frauds":24,"share":0.5,"bits":-2.7864693435231933},{"label":"high 75-95%","lo":0.9376252099835516,"hi":2.498236347409813,"rows":34176,"frauds":59,"share":0.1999953184616465,"bits":-0.2834504998857564},{"label":"high 95-99%","lo":2.498236347409813,"hi":3.9120419359594196,"rows":6836,"frauds":67,"share":0.0400037452306828,"bits":2.213525022620361},{"label":"highest 1%","lo":3.9120419359594196,"hi":null,"rows":1709,"frauds":208,"share":0.0100009363076707,"bits":6.016935111637909}]},{"name":"V11","parent":"V14","stability":[0.96,0.96,0.97,0.98],"bins":[{"label":"lowest 1%","lo":null,"hi":-1.9923187740112547,"rows":1709,"frauds":0,"share":0.0100009363076707,"bits":-6.1928669901941324},{"label":"low 1-5%","lo":-1.9923187740112547,"hi":-1.4263778608097701,"rows":6836,"frauds":0,"share":0.0400037452306828,"bits":-6.1928669901941324},{"label":"low 5-25%","lo":-1.4263778608097701,"hi":-0.5654261758417725,"rows":34176,"frauds":9,"share":0.1999953184616465,"bits":-2.8705285396534697},{"label":"middle 50%","lo":-0.5654261758417725,"hi":0.9991483357928024,"rows":85442,"frauds":33,"share":0.5,"bits":-2.3644906666005823},{"label":"high 75-95%","lo":0.9991483357928024,"hi":1.7862884128790244,"rows":34176,"frauds":20,"share":0.1999953184616465,"bits":-1.799672908763202},{"label":"high 95-99%","lo":1.7862884128790244,"hi":2.4901485127117664,"rows":6836,"frauds":30,"share":0.0400037452306828,"bits":1.0517486290328577},{"label":"highest 1%","lo":2.4901485127117664,"hi":null,"rows":1709,"frauds":268,"share":0.0100009363076707,"bits":6.441358591397265}]}],"links":[{"a":"V10","b":"V14","bits":0.06459115732643077},{"a":"V10","b":"V21","bits":0.06014176725431655},{"a":"V10","b":"V4","bits":0.1521156475571993},{"a":"V14","b":"V12","bits":0.13904969899478023},{"a":"V14","b":"V17","bits":0.11713429135945942},{"a":"V14","b":"V11","bits":0.07530693821689263},{"a":"V17","b":"V16","bits":0.1320370823465319}],"borderline":[{"name":"V19","stability":[0.0,0.61,0.99,1.0]},{"name":"Amount","stability":[0.0,0.16,0.8,0.93]},{"name":"V26","stability":[0.0,0.0,0.23,0.91]}],"outside":[{"name":"V3","stability":[0.52,0.39,0.28,0.44]},{"name":"V5","stability":[0.0,0.14,0.41,0.58]},{"name":"V2","stability":[0.11,0.19,0.32,0.47]},{"name":"V7","stability":[0.2,0.21,0.18,0.31]},{"name":"V25","stability":[0.0,0.0,0.13,0.59]},{"name":"V27","stability":[0.05,0.06,0.06,0.44]},{"name":"V24","stability":[0.0,0.0,0.01,0.45]},{"name":"V13","stability":[0.0,0.0,0.03,0.41]},{"name":"V18","stability":[0.05,0.07,0.09,0.1]},{"name":"V23","stability":[0.0,0.0,0.04,0.22]},{"name":"Hour","stability":[0.0,0.0,0.0,0.24]},{"name":"V28","stability":[0.01,0.03,0.03,0.07]},{"name":"V22","stability":[0.0,0.0,0.0,0.14]},{"name":"V15","stability":[0.0,0.0,0.0,0.1]},{"name":"V20","stability":[0.0,0.0,0.02,0.07]},{"name":"V6","stability":[0.0,0.0,0.0,0.01]},{"name":"V1","stability":[0.0,0.0,0.0,0.0]},{"name":"V9","stability":[0.0,0.0,0.0,0.0]},{"name":"V8","stability":[0.0,0.0,0.0,0.0]}],"penalties":[0.01,0.02,0.05,0.1],"core_rule":0.9,"metrics":[{"threshold":0.6158902158330725,"tp":54,"fp":11,"fn":21,"precision":0.8307692307692308,"recall":0.72,"f1":0.7714285714285715,"model":"Bayesian network (8 blanket features)","ap":0.7484606695949845,"ap_lo":0.6540350730941622,"ap_hi":0.8329008801260797,"valid_ap":0.7348217384197349,"budget_alerts":57,"budget_caught":49,"logloss":0.004127907249382459},{"threshold":0.9994070942069357,"tp":51,"fp":9,"fn":24,"precision":0.85,"recall":0.68,"f1":0.7555555555555556,"model":"Same features, no feature links (naive Bayes)","ap":0.7558520794061261,"ap_lo":0.66173475940533,"ap_hi":0.8468356376081576,"valid_ap":0.7399508816566253,"budget_alerts":57,"budget_caught":50,"logloss":0.007128754126333194},{"threshold":0.5132352113723755,"tp":54,"fp":4,"fn":21,"precision":0.9310344827586207,"recall":0.72,"f1":0.8120300751879699,"model":"XGBoost on the 8 blanket features","ap":0.7862000050709274,"ap_lo":0.6988926381505514,"ap_hi":0.8681428210283149,"valid_ap":0.7432177377352017,"budget_alerts":57,"budget_caught":54,"logloss":0.002728682866970836},{"threshold":0.5451657176017761,"tp":53,"fp":9,"fn":22,"precision":0.8548387096774194,"recall":0.7066666666666667,"f1":0.7737226277372263,"model":"XGBoost on all 30 features","ap":0.790175952104502,"ap_lo":0.6996580104747513,"ap_hi":0.8712661361213072,"valid_ap":0.7764949742409996,"budget_alerts":57,"budget_caught":52,"logloss":0.002634329660170793},{"threshold":0.1885806324895235,"tp":50,"fp":18,"fn":25,"precision":0.7352941176470589,"recall":0.6666666666666666,"f1":0.6993006993006994,"model":"Logistic regression on all 30 features","ap":0.6923213829220477,"ap_lo":0.5909017165954836,"ap_hi":0.7933406147097302,"valid_ap":0.6447621779726339,"budget_alerts":57,"budget_caught":43,"logloss":0.003554468916740083}],"curves":{"Bayesian network (8 blanket features)":[[0.0,1.0],[0.09333333333333334,1.0],[0.13333333333333333,1.0],[0.16,1.0],[0.17333333333333334,1.0],[0.21333333333333335,1.0],[0.24,1.0],[0.29333333333333333,1.0],[0.32,1.0],[0.3466666666666667,1.0],[0.36,1.0],[0.37333333333333335,1.0],[0.4,1.0],[0.41333333333333333,1.0],[0.4266666666666667,1.0],[0.44,1.0],[0.4533333333333333,1.0],[0.4666666666666667,1.0],[0.48,1.0],[0.49333333333333335,1.0],[0.5066666666666667,1.0],[0.52,1.0],[0.5466666666666666,0.9534883720930233],[0.56,0.9545454545454546],[0.5733333333333334,0.9555555555555556],[0.5866666666666667,0.8979591836734694],[0.6,0.8823529411764706],[0.6133333333333333,0.8846153846153846],[0.6266666666666667,0.8703703703703703],[0.64,0.8727272727272727],[0.6533333333333333,0.875],[0.6666666666666666,0.8620689655172413],[0.68,0.864406779661017],[0.6933333333333334,0.8666666666666667],[0.7066666666666667,0.8688524590163934],[0.72,0.8709677419354839],[0.7333333333333333,0.7432432432432432],[0.7466666666666667,0.7],[0.76,0.5876288659793815],[0.7733333333333333,0.4496124031007752],[0.7866666666666666,0.43703703703703706],[0.8,0.2857142857142857],[0.8133333333333334,0.1314655172413793],[0.8266666666666667,0.12180746561886051],[0.84,0.09038737446197992],[0.8533333333333334,0.04066073697585769],[0.8666666666666667,0.038348082595870206],[0.88,0.030569708198239925],[0.8933333333333333,0.014918726341572033],[0.9066666666666666,0.006436346426881212],[0.92,0.0057538358905937295],[0.9333333333333333,0.004700826002283259],[0.9466666666666667,0.003831831183550111],[0.96,0.003283473184968989],[0.9733333333333334,0.0028687075097260976],[0.9866666666666667,0.0017370892018779343],[1.0,0.0014791440686322847]],"XGBoost on all 30 features":[[0.0,1.0],[0.013333333333333334,1.0],[0.02666666666666667,1.0],[0.04,1.0],[0.05333333333333334,1.0],[0.06666666666666667,1.0],[0.08,1.0],[0.09333333333333334,1.0],[0.10666666666666667,1.0],[0.12,1.0],[0.13333333333333333,1.0],[0.14666666666666667,1.0],[0.16,1.0],[0.17333333333333334,1.0],[0.18666666666666668,1.0],[0.2,1.0],[0.21333333333333335,1.0],[0.22666666666666666,1.0],[0.24,1.0],[0.25333333333333335,1.0],[0.26666666666666666,1.0],[0.28,1.0],[0.29333333333333333,1.0],[0.30666666666666664,1.0],[0.32,1.0],[0.3333333333333333,1.0],[0.3466666666666667,1.0],[0.36,1.0],[0.37333333333333335,1.0],[0.38666666666666666,1.0],[0.4,1.0],[0.41333333333333333,1.0],[0.4266666666666667,1.0],[0.44,1.0],[0.4533333333333333,1.0],[0.4666666666666667,1.0],[0.48,1.0],[0.49333333333333335,1.0],[0.5066666666666667,1.0],[0.52,1.0],[0.5466666666666666,1.0],[0.56,1.0],[0.5733333333333334,1.0],[0.5866666666666667,1.0],[0.6,1.0],[0.6133333333333333,1.0],[0.6266666666666667,1.0],[0.64,0.9795918367346939],[0.6533333333333333,0.9607843137254902],[0.6666666666666666,0.9433962264150944],[0.68,0.9444444444444444],[0.6933333333333334,0.9285714285714286],[0.7066666666666667,0.9137931034482759],[0.72,0.8307692307692308],[0.7333333333333333,0.8208955223880597],[0.7466666666666667,0.8235294117647058],[0.76,0.8142857142857143],[0.7733333333333333,0.7945205479452054],[0.7866666666666666,0.6020408163265306],[0.8,0.5128205128205128],[0.8133333333333334,0.3407821229050279],[0.8266666666666667,0.32978723404255317],[0.84,0.2079207920792079],[0.8533333333333334,0.19814241486068113],[0.8666666666666667,0.13319672131147542],[0.88,0.07058823529411765],[0.8933333333333333,0.03785310734463277],[0.9066666666666666,0.022106631989596878],[0.92,0.01216931216931217],[0.9333333333333333,0.009809417040358745],[0.9466666666666667,0.00782800441014333],[0.96,0.006708907938874394],[0.9733333333333334,0.006414762741652021],[0.9866666666666667,0.005255681818181818],[1.0,0.005189952252439277]],"Logistic regression on all 30 features":[[0.0,1.0],[0.013333333333333334,1.0],[0.02666666666666667,1.0],[0.04,1.0],[0.05333333333333334,1.0],[0.06666666666666667,1.0],[0.08,1.0],[0.09333333333333334,1.0],[0.10666666666666667,0.8888888888888888],[0.12,0.9],[0.13333333333333333,0.9090909090909091],[0.14666666666666667,0.9166666666666666],[0.16,0.9230769230769231],[0.17333333333333334,0.9285714285714286],[0.18666666666666668,0.9333333333333333],[0.2,0.9375],[0.21333333333333335,0.9411764705882353],[0.22666666666666666,0.9444444444444444],[0.24,0.9473684210526315],[0.25333333333333335,0.95],[0.26666666666666666,0.9523809523809523],[0.28,0.9545454545454546],[0.29333333333333333,0.9565217391304348],[0.30666666666666664,0.9583333333333334],[0.32,0.96],[0.3333333333333333,0.9615384615384616],[0.3466666666666667,0.9629629629629629],[0.36,0.9642857142857143],[0.37333333333333335,0.9655172413793104],[0.38666666666666666,0.9666666666666667],[0.4,0.967741935483871],[0.4266666666666667,0.9696969696969697],[0.44,0.9705882352941176],[0.4533333333333333,0.8292682926829268],[0.4666666666666667,0.813953488372093],[0.48,0.8],[0.49333333333333335,0.7551020408163265],[0.5066666666666667,0.7307692307692307],[0.52,0.7358490566037735],[0.5333333333333333,0.7407407407407407],[0.5466666666666666,0.7454545454545455],[0.56,0.75],[0.5733333333333334,0.7543859649122807],[0.5866666666666667,0.7586206896551724],[0.6,0.7627118644067796],[0.6133333333333333,0.71875],[0.6266666666666667,0.7230769230769231],[0.64,0.7272727272727273],[0.6533333333333333,0.7313432835820896],[0.6666666666666666,0.7352941176470589],[0.68,0.7083333333333334],[0.6933333333333334,0.7123287671232876],[0.7066666666666667,0.6883116883116883],[0.72,0.6923076923076923],[0.7333333333333333,0.6875],[0.7466666666666667,0.6021505376344086],[0.76,0.49137931034482757],[0.7733333333333333,0.4793388429752066],[0.7866666666666666,0.472],[0.8,0.47244094488188976],[0.8133333333333334,0.391025641025641],[0.8266666666666667,0.32124352331606215],[0.84,0.21724137931034482],[0.8533333333333334,0.21694915254237288],[0.8666666666666667,0.21666666666666667],[0.88,0.04426559356136821],[0.8933333333333333,0.030691708657810353],[0.9066666666666666,0.01694492898081236],[0.92,0.01401015228426396],[0.9333333333333333,0.00922509225092251],[0.9466666666666667,0.008690330477356182],[0.96,0.006596426935409986],[0.9733333333333334,0.005851703406813627],[0.9866666666666667,0.002825182300614668],[1.0,0.0025980324234446445]]},"threshold":0.6158902158330725,"sweep":[{"threshold":0.0005,"tp":63,"fp":1181,"fn":12,"precision":0.05064308681672026,"recall":0.84,"f1":0.09552691432903715},{"threshold":0.001,"tp":63,"fp":691,"fn":12,"precision":0.08355437665782493,"recall":0.84,"f1":0.1519903498190591},{"threshold":0.002,"tp":62,"fp":457,"fn":13,"precision":0.11946050096339114,"recall":0.8266666666666667,"f1":0.20875420875420878},{"threshold":0.005,"tp":60,"fp":208,"fn":15,"precision":0.22388059701492538,"recall":0.8,"f1":0.34985422740524785},{"threshold":0.01,"tp":59,"fp":125,"fn":16,"precision":0.32065217391304346,"recall":0.7866666666666666,"f1":0.4555984555984556},{"threshold":0.02,"tp":59,"fp":84,"fn":16,"precision":0.4125874125874126,"recall":0.7866666666666666,"f1":0.5412844036697247},{"threshold":0.05,"tp":57,"fp":54,"fn":18,"precision":0.5135135135135135,"recall":0.76,"f1":0.6129032258064517},{"threshold":0.1,"tp":57,"fp":43,"fn":18,"precision":0.57,"recall":0.76,"f1":0.6514285714285714},{"threshold":0.2,"tp":56,"fp":24,"fn":19,"precision":0.7,"recall":0.7466666666666667,"f1":0.7225806451612902},{"threshold":0.3,"tp":54,"fp":19,"fn":21,"precision":0.7397260273972602,"recall":0.72,"f1":0.7297297297297296},{"threshold":0.4,"tp":54,"fp":14,"fn":21,"precision":0.7941176470588235,"recall":0.72,"f1":0.7552447552447551},{"threshold":0.5,"tp":54,"fp":12,"fn":21,"precision":0.8181818181818182,"recall":0.72,"f1":0.7659574468085107},{"threshold":0.6,"tp":54,"fp":11,"fn":21,"precision":0.8307692307692308,"recall":0.72,"f1":0.7714285714285715},{"threshold":0.6159,"tp":54,"fp":11,"fn":21,"precision":0.8307692307692308,"recall":0.72,"f1":0.7714285714285715},{"threshold":0.7,"tp":54,"fp":10,"fn":21,"precision":0.84375,"recall":0.72,"f1":0.776978417266187},{"threshold":0.8,"tp":53,"fp":8,"fn":22,"precision":0.8688524590163934,"recall":0.7066666666666667,"f1":0.7794117647058822},{"threshold":0.9,"tp":51,"fp":8,"fn":24,"precision":0.864406779661017,"recall":0.68,"f1":0.7611940298507464},{"threshold":0.95,"tp":49,"fp":8,"fn":26,"precision":0.8596491228070176,"recall":0.6533333333333333,"f1":0.7424242424242424},{"threshold":0.99,"tp":43,"fp":3,"fn":32,"precision":0.9347826086956522,"recall":0.5733333333333334,"f1":0.7107438016528925},{"threshold":0.999,"tp":36,"fp":0,"fn":39,"precision":1.0,"recall":0.48,"f1":0.6486486486486487}],"examples":[{"why":"A fraud the model caught","fraud":1,"prob":0.9999987239863217,"amount":1.0,"hour":18,"bins":[0,0,0,0,0,5,6,6],"bits":[6.6011853071616144,4.110969431613094,4.001313623748365,4.303270051562549,2.808281995134312,1.3956638157673447,3.6488854559439603,1.594121963287359]},{"why":"A fraud the model missed","fraud":1,"prob":1.9882385910605637e-09,"amount":2.47,"hour":18,"bins":[4,3,3,4,1,4,5,3],"bits":[-2.6074091213648534,-2.6308701349846952,-2.944512755200083,-3.972887667045436,-4.765585770416398,-2.3707242137278843,1.6635670844920312,-2.3936706702598007]},{"why":"A false alarm","fraud":0,"prob":0.9981494184369415,"amount":1.99,"hour":22,"bins":[0,1,2,0,0,6,4,4],"bits":[6.6011853071616144,3.992026029211152,-4.85704625504795,4.303270051562549,4.274755470510524,2.294136079622559,0.8175811803045369,0.532994110439876]},{"why":"A typical normal transaction","fraud":0,"prob":6.126680192706102e-07,"amount":4.49,"hour":19,"bins":[3,3,3,3,3,2,3,2],"bits":[-2.8997137322363975,-2.6308701349846952,-1.4927185445639541,-1.0866094334915333,-0.5845386427093097,-2.1711510515012185,-1.305983856362827,0.41696387155994397]}],"gap":{"mean":-0.041681799266184295,"lo":-0.08684448643686957,"hi":-0.006038904157597123},"gap_blanket":{"mean":-0.004024561402621826,"lo":-0.03329360232429588,"hi":0.022214490724903533}};
+(function(){
+const D=DATA, $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.append(e);return e};
+const pct=(x,d=0)=>(100*x).toFixed(d)+"%", n0=x=>x.toLocaleString("en-US");
+const times=b=>{const x=2**Math.abs(b);return x>=10?Math.round(x):x.toFixed(1)};
+const says=b=>Math.abs(b)<0.2?"no signal":"×"+times(b)+(b>0?" fraud":" normal");
+const bn=D.metrics[0], xg=D.metrics[3], T=D.split.test;
+
+// headline
+$("stats").innerHTML=[
+  [D.features.length+" of 30","features are in the blanket"],
+  [bn.ap.toFixed(2),"area under the precision-recall curve (XGBoost: "+xg.ap.toFixed(2)+")"],
+  [pct(bn.precision),"of flagged transactions were fraud"],
+  [pct(bn.recall),"of frauds were caught ("+bn.tp+" of "+T.frauds+")"]
+].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+
+// strength of each feature = mutual information with fraud, in bits
+function mi(f){const F=f.bins.reduce((s,b)=>s+b.frauds,0),N=f.bins.reduce((s,b)=>s+b.rows,0);let m=0;
+  for(const b of f.bins)for(const [k,tot] of [[b.frauds,F],[b.rows-b.frauds,N-F]]){if(k>0)m+=k/N*Math.log2((k/tot)/(b.rows/N))}return m}
+D.features.forEach(f=>f.mi=mi(f));
+const maxMI=Math.max(...D.features.map(f=>f.mi));
+
+// ring order: walk the feature-link tree so linked features sit near each other
+const adj={};D.features.forEach(f=>adj[f.name]=[]);D.links.forEach(l=>{adj[l.a].push(l.b);adj[l.b].push(l.a)});
+const order=[],seen=new Set();
+(function walk(v){if(seen.has(v))return;seen.add(v);order.push(v);adj[v].forEach(walk)})(D.features.slice().sort((a,b)=>adj[b.name].length-adj[a.name].length)[0].name);
+D.features.forEach(f=>{if(!seen.has(f.name))order.push(f.name)});
+const C=220,pos={};
+order.forEach((n,i)=>{const a=-Math.PI/2+i*2*Math.PI/order.length;pos[n]=[C+122*Math.cos(a),C+122*Math.sin(a)]});
+D.borderline.forEach((b,i)=>{const a=-Math.PI/2+(i+0.5)*2*Math.PI/order.length+Math.PI/order.length*2*i;pos[b.name]=[C+192*Math.cos(a),C+192*Math.sin(a)]});
+
+const net=$("net");
+D.links.forEach(l=>{const [x1,y1]=pos[l.a],[x2,y2]=pos[l.b];const mx=(x1+x2)/2,my=(y1+y2)/2,k=1.22;
+  el("path",{class:"link",d:`M${x1},${y1} Q${C+(mx-C)*k},${C+(my-C)*k} ${x2},${y2}`},net)});
+D.borderline.forEach(b=>{const [x,y]=pos[b.name];el("line",{class:"spoke edge",x1:C,y1:C,x2:x,y2:y,"stroke-width":1.2},net)});
+D.features.forEach(f=>{const [x,y]=pos[f.name];el("line",{class:"spoke",x1:C,y1:C,x2:x,y2:y,"stroke-width":(1.5+6*f.mi/maxMI).toFixed(1)},net)});
+const hub=el("g",{},net);el("circle",{cx:C,cy:C,r:36,fill:"var(--ink)"},hub);
+el("text",{x:C,y:C+5,"text-anchor":"middle","font-weight":700,"font-size":15,style:"fill:var(--bg)"},hub).textContent="Fraud";
+D.borderline.forEach(b=>{const [x,y]=pos[b.name];const g=el("g",{class:"node edge"},net);el("circle",{cx:x,cy:y,r:19},g);
+  el("text",{x,y:y+4,"text-anchor":"middle","font-size":b.name.length>4?9.5:11.5,style:"fill:var(--ink-2)"},g).textContent=b.name;
+  el("title",{},g).textContent=b.name+": chosen at only some penalty strengths, so left out"});
+D.features.forEach(f=>{const [x,y]=pos[f.name];const g=el("g",{class:"node",tabindex:0,role:"button","aria-label":f.name},net);g.dataset.n=f.name;
+  el("circle",{cx:x,cy:y,r:25},g);el("text",{x,y:y+5,"text-anchor":"middle","font-weight":600,"font-size":14},g).textContent=f.name;
+  g.addEventListener("click",()=>pick(f.name));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(f.name)}})});
+$("outside").innerHTML=D.outside.map(o=>`<span>${o.name}</span>`).join("");
+
+function bars(rows){ // rows: [label, small, bits]
+  const mx=Math.max(7,...rows.map(r=>Math.abs(r[2])));
+  return `<div class="bars">`+rows.map(r=>{const w=Math.abs(r[2])/mx*48,f=r[2]>0;
+    return `<div class="lab">${r[0]}<small>${r[1]}</small></div><div class="track"><div class="bar ${f?"f":"n"}" style="width:${w.toFixed(1)}%"></div><div class="val ${f?"f":"n"}">${says(r[2])}</div></div>`}).join("")
+    +`</div><div class="axis2"><span>← more common in normal</span><span>more common in fraud →</span></div>`}
+
+function pick(name){
+  net.querySelectorAll(".node").forEach(g=>g.classList.toggle("sel",g.dataset.n===name));
+  const f=D.features.find(x=>x.name===name),worst=Math.min(...f.stability);
+  const partners=adj[name].length?"Moves together with "+adj[name].join(", ")+".":"Not linked to another feature.";
+  $("detail").innerHTML=`<h3>${name}: what each range says about fraud</h3>
+    <p class="note">Ranges are where the value falls among all transactions. ${partners}</p>`
+    +bars(f.bins.map(b=>[b.label,n0(b.rows)+" rows, "+b.frauds+" fraud",b.bits]))
+    +`<p class="note" style="margin-top:.8rem">${worst>=1?"Chosen in every one":"Chosen in at least "+Math.round(worst*100)} of 100 random half-samples, at every penalty strength tried.</p>`}
+pick(D.features.slice().sort((a,b)=>b.mi-a.mi)[0].name);
+
+// examples
+const base=1/(1+2**(-D.prior_bits));
+function showEx(i){
+  $("extabs").querySelectorAll("button").forEach((b,k)=>b.setAttribute("aria-pressed",k===i));
+  const e=D.examples[i];
+  $("example").innerHTML=`<p class="note">Starts at the base rate: about 1 in ${Math.round(1/base)} transactions is fraud. Each feature then moves the odds.</p>`
+    +bars(D.features.map((f,k)=>[f.name,f.bins[e.bins[k]].label,e.bits[k]]))
+    +`<p class="verdict">Model: ${e.prob>0.9995?"over 99.9":e.prob<0.0005?"under 0.1":(100*e.prob).toFixed(1)}% chance of fraud. In reality it was ${e.fraud?"fraud":"normal"}.</p>
+    <p class="note">For linked features, the second one counts only for what it adds beyond the first, so its bar can differ from its stand-alone reading above.</p>`}
+$("extabs").innerHTML=D.examples.map(e=>`<button type="button" aria-pressed="false">${e.why}</button>`).join("");
+$("extabs").querySelectorAll("button").forEach((b,i)=>b.addEventListener("click",()=>showEx(i)));
+showEx(0);
+
+// precision-recall
+const hrs=h=>"hour "+Math.round(h[0])+" to "+Math.round(h[1]);
+$("prsub").textContent=`The model was fitted on the first ${n0(D.split.train.rows)} transactions (${hrs(D.split.train.hours)}), tuned on the next ${n0(D.split.valid.rows)}, and tested once on the last ${n0(T.rows)} (${hrs(T.hours)}), which contain ${T.frauds} frauds.`;
+const pr=$("pr"),L=46,R=14,Tp=14,B=40,W=440-L-R,H=330-Tp-B,X=r=>L+r*W,Y=p=>Tp+(1-p)*H;
+for(let k=0;k<=4;k++){const v=k/4;
+  el("line",{x1:L,x2:L+W,y1:Y(v),y2:Y(v),stroke:"var(--line)"},pr);el("line",{x1:X(v),x2:X(v),y1:Tp,y2:Tp+H,stroke:"var(--line)"},pr);
+  el("text",{x:L-6,y:Y(v)+4,"text-anchor":"end","font-size":11,style:"fill:var(--ink-3)"},pr).textContent=pct(v);
+  el("text",{x:X(v),y:Tp+H+15,"text-anchor":"middle","font-size":11,style:"fill:var(--ink-3)"},pr).textContent=pct(v)}
+el("text",{x:L+W/2,y:326,"text-anchor":"middle","font-size":12,style:"fill:var(--ink-2)"},pr).textContent="Recall: share of frauds caught";
+el("text",{x:12,y:Tp+H/2,"text-anchor":"middle","font-size":12,transform:`rotate(-90 12 ${Tp+H/2})`,style:"fill:var(--ink-2)"},pr).textContent="Precision";
+const series=Object.keys(D.curves).map((k,i)=>({name:k,short:["Bayesian network","XGBoost, all 30","Logistic regression"][i],col:["var(--s1)","var(--s2)","var(--s3)"][i],pts:D.curves[k].filter(p=>p[0]>0)}));
+series.slice().reverse().forEach(s=>el("path",{d:"M"+s.pts.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join("L"),fill:"none",stroke:s.col,"stroke-width":s===series[0]?2.5:2,"stroke-linejoin":"round"},pr));
+series.forEach((s,i)=>{const y=Tp+H-14-(2-i)*17;el("line",{x1:L+12,x2:L+34,y1:y-4,y2:y-4,stroke:s.col,"stroke-width":3},pr);el("text",{x:L+40,y,"font-size":12},pr).textContent=s.short});
+const dot=el("circle",{r:6,fill:"var(--s1)",stroke:"var(--surface)","stroke-width":2},pr);
+const cross=el("line",{y1:Tp,y2:Tp+H,stroke:"var(--axis)","stroke-dasharray":"3 3",visibility:"hidden"},pr);
+const at=(s,r)=>s.pts.reduce((b,p)=>Math.abs(p[0]-r)<Math.abs(b[0]-r)?p:b)[1];
+const tip=$("tip");
+pr.addEventListener("pointermove",e=>{const bx=pr.getBoundingClientRect(),r=((e.clientX-bx.left)/bx.width*440-L)/W;
+  if(r<0.02||r>1){tip.hidden=true;cross.setAttribute("visibility","hidden");return}
+  cross.setAttribute("x1",X(r));cross.setAttribute("x2",X(r));cross.setAttribute("visibility","visible");
+  tip.hidden=false;tip.style.left=(X(r)/440*bx.width)+"px";tip.style.top=(Tp/330*bx.height+28)+"px";
+  tip.innerHTML="At "+pct(r)+" recall, precision is:<br>"+series.map(s=>s.short+" "+pct(at(s,r))).join("<br>")});
+pr.addEventListener("pointerleave",()=>{tip.hidden=true;cross.setAttribute("visibility","hidden")});
+
+const thr=$("thr");thr.max=D.sweep.length-1;
+thr.value=D.sweep.findIndex(s=>Math.abs(s.threshold-D.threshold)<1e-3);
+function showThr(){const s=D.sweep[+thr.value];
+  $("thrlab").textContent="Flag a transaction when the model's fraud probability is at least "+(s.threshold*100).toFixed(s.threshold<0.01?2:1)+"%";
+  $("throut").innerHTML=[[n0(s.tp+s.fp),"transactions flagged"],[s.tp+" of "+T.frauds,"frauds caught"],[s.fp,"false alarms"],[pct(s.precision),"precision"],[pct(s.recall),"recall"]]
+    .map(o=>`<div><b>${o[0]}</b><span>${o[1]}</span></div>`).join("");
+  dot.setAttribute("cx",X(s.recall));dot.setAttribute("cy",Y(s.precision))}
+thr.addEventListener("input",showThr);showThr();
+$("thrnote").textContent="The starting position ("+(D.threshold*100).toFixed(0)+"%) was chosen on the tuning slice, before the test slice was opened. The dot on the chart follows the slider.";
+
+$("mt").innerHTML=`<thead><tr><th>Model</th><th>Area under PR curve</th><th>95% interval</th><th>Precision</th><th>Recall</th><th>F1</th><th>Caught in top ${bn.budget_alerts}</th></tr></thead><tbody>`
+  +D.metrics.map((m,i)=>`<tr class="${i?"":"me"}"><td>${m.model}</td><td>${m.ap.toFixed(3)}</td><td>${m.ap_lo.toFixed(2)} to ${m.ap_hi.toFixed(2)}</td><td>${pct(m.precision,1)}</td><td>${pct(m.recall,1)}</td><td>${m.f1.toFixed(3)}</td><td>${m.budget_caught} of ${T.frauds}</td></tr>`).join("")+"</tbody>";
+const g=D.gap,gb=D.gap_blanket;
+$("gapnote").textContent=`Precision, recall and F1 use each model's own threshold, chosen on the tuning slice. "Top ${bn.budget_alerts}" is what each model catches if only 1 in 1,000 transactions can be reviewed. Intervals come from ${1000} bootstrap resamples of the test slice.`;
+
+$("limits").innerHTML=[
+  `<b>It finds signals, not causes.</b> The blanket says which features carry information about fraud. It cannot say a feature causes fraud, and nobody can act on "V14" because its meaning is withheld.`,
+  `<b>The blanket holds nearly all the usable signal.</b> XGBoost given only the ${D.features.length} blanket features scores ${D.metrics[2].ap.toFixed(3)}; given all 30 it scores ${xg.ap.toFixed(3)} (difference ${gb.mean.toFixed(3)}, 95% interval ${gb.lo.toFixed(3)} to ${gb.hi.toFixed(3)}).`,
+  `<b>Reading the model costs some accuracy.</b> The Bayesian network trails XGBoost by ${Math.abs(g.mean).toFixed(3)} in area under the curve (95% interval ${Math.abs(g.hi).toFixed(3)} to ${Math.abs(g.lo).toFixed(3)}).`,
+  `<b>The test is small.</b> ${T.frauds} frauds in the test slice, so every figure here has a wide interval.`,
+  `<b>Two days of data.</b> The model has never seen a weekend, a holiday or a new fraud scheme.`
+].map(t=>`<li>${t}</li>`).join("");
+})();
+</script>
+</body></html>

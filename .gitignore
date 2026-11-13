@@ -1,5 +1,3 @@
-
-*.csv
-*.png
-*.png
-xgboost_pr_curve.png
+__pycache__/
+data/
+*.pkl
